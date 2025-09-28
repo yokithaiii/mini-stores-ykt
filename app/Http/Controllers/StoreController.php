@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StoreRequest;
+use App\Http\Requests\StoreUpdateRequest;
 use App\Models\Store;
 use Illuminate\Http\Request;
 
@@ -19,33 +21,22 @@ class StoreController extends Controller
         return response()->json(['data' => $store]);
     }
 
-    public function store(Request $request)
+    public function store(StoreRequest $request)
     {
-        $validatedData = $request->validate([
-            'name' => 'required|string|max:255',
-            'description' => 'nullable|string|max:255',
-            'logo_url' => 'nullable|string|max:255',
-        ]);
+        $validatedData = $request->validated();
 
         $user = $request->user();
 
-        $store = Store::query()->create([
-            'name' => $validatedData['name'],
-            'description' => $validatedData['description'],
-            'logo_url' => $validatedData['logo_url'],
-            'user_id' => $user->id,
-        ]);
+        $validatedData['user_id'] = $user->id;
+
+        $store = Store::query()->create($validatedData);
 
         return response()->json(['data' => $store]);
     }
 
-    public function update(Request $request, Store $store)
+    public function update(StoreUpdateRequest $request, Store $store)
     {
-        $validatedData = $request->validate([
-            'name' => 'required|string|max:255',
-            'description' => 'nullable|string|max:255',
-            'logo_url' => 'nullable|string|max:255',
-        ]);
+        $validatedData = $request->validated();
 
         $store->update($validatedData);
 
