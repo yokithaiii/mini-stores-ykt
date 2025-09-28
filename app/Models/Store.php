@@ -8,12 +8,23 @@ use Illuminate\Database\Eloquent\Model;
 
 class Store extends Model
 {
-    use HasUuids, HasFactory;
+    use HasUuids;
 
     protected $fillable = [
         'name',
         'slug',
+        'description',
+        'logo_url',
+        'user_id'
     ];
+
+    public static function boot()
+    {
+        parent::boot();
+        static::creating(function ($model) {
+            $model->slug = 'store-' . $model->id;
+        });
+    }
 
     public function user()
     {

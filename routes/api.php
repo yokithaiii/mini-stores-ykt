@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\StoreController;
 use App\Http\Controllers\TestController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -26,9 +27,13 @@ Route::get('/test', [TestController::class, 'test']);
 Route::middleware('auth:sanctum')->group(function () {
 
     // Stores routes
-    Route::prefix('companies')->group(function () {
+    Route::prefix('stores')->group(function () {
 
-//        Route::get('/',)
+        Route::get('/', [StoreController::class, 'index']);
+        Route::post('/', [StoreController::class, 'store']);
+        Route::get('/{store}', [StoreController::class, 'show']);
+        Route::post('/{store}', [StoreController::class, 'update']);
+        Route::delete('/{store}', [StoreController::class, 'destroy']);
 
     });
 
