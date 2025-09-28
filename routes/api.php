@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\ProductController;
 use App\Http\Controllers\StoreController;
 use App\Http\Controllers\TestController;
 use Illuminate\Http\Request;
@@ -34,6 +36,28 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/{store}', [StoreController::class, 'show']);
         Route::post('/{store}', [StoreController::class, 'update']);
         Route::delete('/{store}', [StoreController::class, 'destroy']);
+
+    });
+
+    // Categories routes
+    Route::prefix('categories')->group(function () {
+
+        Route::get('/', [CategoryController::class, 'index']);
+        Route::post('/', [CategoryController::class, 'store']);
+        Route::get('/{category}', [CategoryController::class, 'show']);
+        Route::post('/{category}', [CategoryController::class, 'update']);
+        Route::delete('/{category}', [CategoryController::class, 'destroy']);
+
+    });
+
+    // Products routes
+    Route::prefix('products')->group(function () {
+
+        Route::get('/', [ProductController::class, 'index']);
+        Route::post('/', [ProductController::class, 'store']);
+        Route::get('/{product}', [ProductController::class, 'show']);
+        Route::post('/{product}', [ProductController::class, 'update']);
+        Route::delete('/{product}', [ProductController::class, 'destroy']);
 
     });
 
