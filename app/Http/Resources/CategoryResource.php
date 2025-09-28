@@ -24,9 +24,7 @@ class CategoryResource extends JsonResource
                 ] : null;
             }),
             'childs' => CategoryResource::collection($this->whenLoaded('childs')),
-            'store' => $this->whenLoaded('store', function () {
-                return $this->store ? StoreResource::make($this->whenLoaded('store')) : null;
-            }),
+            'store_id' => $this->store_id
         ];
     }
 }

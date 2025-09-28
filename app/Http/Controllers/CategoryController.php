@@ -20,7 +20,9 @@ class CategoryController extends Controller
 
     public function show(Category $category)
     {
-        return response()->json(['data' => $category]);
+        $category = $category->load(['parent', 'childs', 'store']);
+
+        return CategoryResource::make($category);
     }
 
     public function store(CategoryRequest $request)
@@ -29,7 +31,7 @@ class CategoryController extends Controller
 
         $category = Category::query()->create($validatedData);
 
-        return response()->json(['data' => $category]);
+        return CategoryResource::make($category);
     }
 
     public function update(CategoryUpdateRequest $request, Category $category)
@@ -38,7 +40,7 @@ class CategoryController extends Controller
 
         $category->update($validatedData);
 
-        return response()->json(['data' => $category]);
+        return CategoryResource::make($category);
     }
 
     public function destroy(Category $category)
