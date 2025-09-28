@@ -31,4 +31,9 @@ class Category extends Model
     {
         return $this->belongsTo(Category::class, 'category_id');
     }
+
+    public function childs()
+    {
+        return $this->hasMany(Category::class, 'category_id', 'id');
+    }
 }

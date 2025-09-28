@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\CategoryRequest;
 use App\Http\Requests\CategoryUpdateRequest;
+use App\Http\Resources\CategoryResource;
 use App\Models\Category;
 use App\Models\Store;
 use Illuminate\Http\Request;
@@ -12,9 +13,9 @@ class CategoryController extends Controller
 {
     public function index()
     {
-        $categories = Category::all();
+        $categories = Category::with(['parent', 'childs', 'store'])->get();
 
-        return response()->json(['data' => $categories]);
+        return CategoryResource::collection($categories);
     }
 
     public function show(Category $category)

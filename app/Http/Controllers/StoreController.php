@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreRequest;
 use App\Http\Requests\StoreUpdateRequest;
+use App\Http\Resources\StoreResource;
 use App\Models\Store;
 use Illuminate\Http\Request;
 
@@ -13,12 +14,12 @@ class StoreController extends Controller
     {
         $stores = Store::all();
 
-        return response()->json(['data' => $stores]);
+        return StoreResource::collection($stores);
     }
 
     public function show(Store $store)
     {
-        return response()->json(['data' => $store]);
+        return StoreResource::make($store);
     }
 
     public function store(StoreRequest $request)
@@ -31,7 +32,7 @@ class StoreController extends Controller
 
         $store = Store::query()->create($validatedData);
 
-        return response()->json(['data' => $store]);
+        return StoreResource::make($store);
     }
 
     public function update(StoreUpdateRequest $request, Store $store)
@@ -40,7 +41,7 @@ class StoreController extends Controller
 
         $store->update($validatedData);
 
-        return response()->json(['data' => $store]);
+        return StoreResource::make($store);
     }
 
     public function destroy(Store $store)
