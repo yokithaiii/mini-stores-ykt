@@ -32,7 +32,8 @@ class AuthController extends Controller
         $this->authService = $authService;
         $this->smsService = $smsService;
         $this->emailService = $emailService;
-        $this->confirmationCode = generateUserVerifyCode();
+//        $this->confirmationCode = generateUserVerifyCode();
+        $this->confirmationCode = 1111;
     }
 
     public function loginByEmail(LoginEmailRequest $request)
@@ -96,7 +97,7 @@ class AuthController extends Controller
                 ->where('phone_verified_at', '!=', null)
                 ->exists();
             if ($user) {
-                return response()->json(['error' => 'User already exists with phone: ' . $phone]);
+                return response()->json(['error' => 'Пользователь с таким номером телефона уже есть: ' . $phone], 400);
             }
 
             $user = User::query()->updateOrCreate([
