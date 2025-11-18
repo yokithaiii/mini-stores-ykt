@@ -23,6 +23,8 @@ class CategoryUpdateRequest extends FormRequest
     {
         return [
             'name' => 'required|string|max:255',
+            'store_id' => 'nullable|string|exists:stores,id',
+            'category_id' => 'nullable|string|exists:categories,id',
         ];
     }
 }

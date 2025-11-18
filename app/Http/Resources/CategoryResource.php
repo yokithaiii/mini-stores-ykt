@@ -17,6 +17,7 @@ class CategoryResource extends JsonResource
         return [
             'id' => $this->id,
             'name' => $this->name,
+            'category_id' => $this->category_id,
             'parent' => $this->whenLoaded('parent', function () {
                 return $this->parent ? [
                     'id' => $this->parent->id,
@@ -24,7 +25,13 @@ class CategoryResource extends JsonResource
                 ] : null;
             }),
             'childs' => CategoryResource::collection($this->whenLoaded('childs')),
-            'store_id' => $this->store_id
+            'store' => $this->whenLoaded('store', function () {
+                return $this->store ? [
+                    'id' => $this->store->id,
+                    'name' => $this->store->name,
+                ] : null;
+            }),
+            'store_id' => $this->store_id,
         ];
     }
 }
