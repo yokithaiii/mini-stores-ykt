@@ -18,22 +18,43 @@
                     </button>
                 </div>
 
-                <!-- Шаг 1: Ввод телефона -->
+                <!-- Шаг 1: Ввод телефона и имени -->
                 <div v-if="step === 1">
                     <p class="text-sm text-gray-600 mb-4">
-                        Введите номер телефона для входа
+                        Введите ваши данные для входа
                     </p>
-                    <input
-                        v-model="phone"
-                        type="tel"
-                        placeholder="+7 (999) 123-45-67"
-                        class="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-base text-gray-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
-                        @keyup.enter="sendCode"
-                    />
+                    <div class="space-y-3">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">
+                                Имя <span class="text-red-500">*</span>
+                            </label>
+                            <input
+                                v-model="name"
+                                type="text"
+                                placeholder="Ваше имя"
+                                required
+                                class="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-base text-gray-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+                            />
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">
+                                Телефон <span class="text-red-500">*</span>
+                            </label>
+                            <input
+                                ref="phoneInput"
+                                v-model="phone"
+                                type="tel"
+                                placeholder="+7 (999) 123-45-67"
+                                required
+                                class="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-base text-gray-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+                                @keyup.enter="sendCode"
+                            />
+                        </div>
+                    </div>
                     <button
                         class="mt-4 w-full rounded-xl py-3 text-base font-semibold text-white shadow-sm transition-all hover:shadow-md disabled:cursor-not-allowed disabled:opacity-60"
                         :style="{ backgroundColor: loading ? colors.neutral[400] : colors.primary[500] }"
-                        :disabled="loading || !phone"
+                        :disabled="loading || !phone || !name"
                         @click="sendCode"
                     >
                         {{ loading ? 'Отправляем...' : 'Получить код' }}
@@ -83,9 +104,11 @@
 <script setup>
 import axios from 'axios';
 import { ref } from 'vue';
-import { themeConfig } from '../config/theme.js';
+import { usePhoneMask } from '../composables/usePhoneMask.js';
+import { normalizePhone } from '../utils/phoneUtils.js';
+import { useTheme } from '../composables/useTheme.js';
 
-const colors = themeConfig;
+const { theme: colors } = useTheme();
 
 const props = defineProps({
     show: Boolean,
@@ -94,18 +117,25 @@ const props = defineProps({
 const emit = defineEmits(['close', 'success']);
 
 const step = ref(1);
+const name = ref('');
 const phone = ref('');
+const phoneInput = ref(null);
 const code = ref('');
 const loading = ref(false);
 const error = ref('');
+
+// Инициализируем маску телефона
+usePhoneMask(phoneInput);
 
 const sendCode = async () => {
     error.value = '';
     loading.value = true;
 
     try {
+        const normalizedPhone = normalizePhone(phone.value);
         const response = await axios.post('/api/customer/send-code', {
-            phone: phone.value,
+            phone: normalizedPhone,
+            name: name.value,
         });
 
         step.value = 2;
@@ -121,13 +151,14 @@ const verifyCode = async () => {
     loading.value = true;
 
     try {
+        const normalizedPhone = normalizePhone(phone.value);
         const response = await axios.post('/api/customer/verify-code', {
-            phone: phone.value,
+            phone: normalizedPhone,
             code: code.value,
         });
 
-        // Сохраняем телефон в localStorage
-        localStorage.setItem('customer_phone', phone.value);
+        // Сохраняем НОРМАЛИЗОВАННЫЙ телефон в localStorage
+        localStorage.setItem('customer_phone', normalizedPhone);
         localStorage.setItem('customer_data', JSON.stringify(response.data.customer));
 
         emit('success', response.data.customer);

@@ -99,10 +99,10 @@
 
 <script setup>
 import { computed } from 'vue';
-import { themeConfig } from '../config/theme.js';
 import { useCart } from '../composables/useCart.js';
+import { useTheme } from '../composables/useTheme.js';
 
-const colors = themeConfig;
+const { theme: colors } = useTheme();
 
 const props = defineProps({
     show: Boolean,

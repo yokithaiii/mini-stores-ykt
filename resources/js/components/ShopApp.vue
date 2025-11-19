@@ -11,153 +11,186 @@
         />
 
         <main class="mx-auto max-w-7xl px-4 py-8">
-            <!-- Фильтры и сортировка -->
-            <div class="mb-6 rounded-2xl bg-white p-6 shadow-sm ring-1 ring-gray-900/5">
-                <div class="mb-4 flex items-center justify-between">
-                    <h3 class="text-lg font-bold text-gray-900">Фильтры</h3>
-                    <div class="flex items-center gap-3">
-                        <select
-                            v-model="sortBy"
-                            class="rounded-xl border border-gray-300 bg-white px-4 py-2 text-sm text-gray-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
-                        >
-                            <option value="newest">Сначала новые</option>
-                            <option value="price_asc">Цена: дешевле</option>
-                            <option value="price_desc">Цена: дороже</option>
-                        </select>
-                        <button
-                            v-if="hasActiveFilters"
-                            class="text-sm font-semibold text-blue-600 hover:text-blue-700"
-                            @click="resetFilters"
-                        >
-                            Сбросить все
-                        </button>
-                    </div>
-                </div>
-                <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-                    <div>
-                        <label class="text-sm font-medium text-gray-700">Категория</label>
-                        <select
-                            v-model="filters.category_id"
-                            class="mt-2 w-full rounded-xl border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
-                            @change="applyFilters"
-                        >
-                            <option value="">Все категории</option>
-                            <option v-for="category in categories" :key="category.id" :value="category.id">
-                                {{ category.name }}
-                            </option>
-                        </select>
-                    </div>
-                    
-                    <div>
-                        <label class="text-sm font-medium text-gray-700">Бренд</label>
-                        <select
-                            v-model="filters.brand_id"
-                            class="mt-2 w-full rounded-xl border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
-                            @change="applyFilters"
-                        >
-                            <option value="">Все бренды</option>
-                            <option v-for="brand in brands" :key="brand.id" :value="brand.id">
-                                {{ brand.name }}
-                            </option>
-                        </select>
-                    </div>
-                    
-                    <div>
-                        <label class="text-sm font-medium text-gray-700">Пол</label>
-                        <select
-                            v-model="filters.gender"
-                            class="mt-2 w-full rounded-xl border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
-                            @change="applyFilters"
-                        >
-                            <option value="">Все</option>
-                            <option value="male">Мужской</option>
-                            <option value="female">Женский</option>
-                            <option value="unisex">Унисекс</option>
-                        </select>
-                    </div>
-                    
-                    <div>
-                        <label class="text-sm font-medium text-gray-700">Цена</label>
-                        <div class="mt-2 flex gap-2">
-                            <input
-                                v-model.number="filters.price_min"
-                                type="number"
-                                min="0"
-                                placeholder="От"
-                                class="w-full rounded-xl border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
-                                @input="applyFilters"
-                            />
-                            <input
-                                v-model.number="filters.price_max"
-                                type="number"
-                                min="0"
-                                placeholder="До"
-                                class="w-full rounded-xl border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
-                                @input="applyFilters"
-                            />
+            <!-- Кнопка фильтров для мобильных -->
+            <div class="mb-4 lg:hidden">
+                <button
+                    class="flex w-full items-center justify-center gap-2 rounded-xl border-2 border-gray-300 bg-white px-4 py-3 text-sm font-semibold text-gray-700 transition hover:bg-gray-50"
+                    @click="showMobileFilters = true"
+                >
+                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+                    </svg>
+                    Фильтры
+                    <span v-if="hasActiveFilters" class="rounded-full bg-blue-500 px-2 py-0.5 text-xs text-white">
+                        {{ activeFiltersCount }}
+                    </span>
+                </button>
+            </div>
+
+            <div class="flex gap-6">
+                <!-- Боковая панель с фильтрами (десктоп) -->
+                <aside class="hidden w-64 flex-shrink-0 lg:block">
+                    <div class="sticky top-24 space-y-6">
+                        <!-- Заголовок фильтров -->
+                        <div class="flex items-center justify-between">
+                            <h3 class="text-lg font-bold text-gray-900">Фильтры</h3>
+                            <button
+                                v-if="hasActiveFilters"
+                                class="text-sm font-semibold text-blue-600 hover:text-blue-700"
+                                @click="resetFilters"
+                            >
+                                Сбросить
+                            </button>
+                        </div>
+
+                        <!-- Фильтры -->
+                        <div class="space-y-6 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-gray-900/5">
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-900 mb-2">Сортировка</label>
+                                <select
+                                    v-model="sortBy"
+                                    class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+                                >
+                                    <option value="newest">Сначала новые</option>
+                                    <option value="price_asc">Цена: дешевле</option>
+                                    <option value="price_desc">Цена: дороже</option>
+                                </select>
+                            </div>
+
+                            <!-- Категория -->
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-900 mb-2">Категория</label>
+                                <select
+                                    v-model="filters.category_id"
+                                    class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+                                    @change="applyFilters"
+                                >
+                                    <option value="">Все категории</option>
+                                    <option v-for="category in categories" :key="category.id" :value="category.id">
+                                        {{ category.name }}
+                                    </option>
+                                </select>
+                            </div>
+                            
+                            <!-- Бренд -->
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-900 mb-2">Бренд</label>
+                                <select
+                                    v-model="filters.brand_id"
+                                    class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+                                    @change="applyFilters"
+                                >
+                                    <option value="">Все бренды</option>
+                                    <option v-for="brand in brands" :key="brand.id" :value="brand.id">
+                                        {{ brand.name }}
+                                    </option>
+                                </select>
+                            </div>
+                            
+                            <!-- Пол -->
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-900 mb-2">Пол</label>
+                                <select
+                                    v-model="filters.gender"
+                                    class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+                                    @change="applyFilters"
+                                >
+                                    <option value="">Все</option>
+                                    <option value="male">Мужской</option>
+                                    <option value="female">Женский</option>
+                                    <option value="unisex">Унисекс</option>
+                                </select>
+                            </div>
+                            
+                            <!-- Цена -->
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-900 mb-2">Цена</label>
+                                <div class="space-y-2">
+                                    <input
+                                        v-model.number="filters.price_min"
+                                        type="number"
+                                        min="0"
+                                        placeholder="От"
+                                        class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+                                        @input="applyFilters"
+                                    />
+                                    <input
+                                        v-model.number="filters.price_max"
+                                        type="number"
+                                        min="0"
+                                        placeholder="До"
+                                        class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+                                        @input="applyFilters"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Активные фильтры -->
+                        <div v-if="hasActiveFilters" class="space-y-2">
+                            <p class="text-sm font-semibold text-gray-900">Активные фильтры:</p>
+                            <div class="flex flex-wrap gap-2">
+                                <span
+                                    v-if="filters.category_id"
+                                    class="inline-flex items-center gap-1 rounded-full bg-blue-100 px-3 py-1 text-xs font-semibold text-blue-700"
+                                >
+                                    {{ categoryMap[filters.category_id] }}
+                                    <button @click="filters.category_id = ''; applyFilters()">×</button>
+                                </span>
+                                <span
+                                    v-if="filters.brand_id"
+                                    class="inline-flex items-center gap-1 rounded-full bg-blue-100 px-3 py-1 text-xs font-semibold text-blue-700"
+                                >
+                                    {{ brandMap[filters.brand_id] }}
+                                    <button @click="filters.brand_id = ''; applyFilters()">×</button>
+                                </span>
+                                <span
+                                    v-if="filters.gender"
+                                    class="inline-flex items-center gap-1 rounded-full bg-blue-100 px-3 py-1 text-xs font-semibold text-blue-700"
+                                >
+                                    {{ getGenderLabel(filters.gender) }}
+                                    <button @click="filters.gender = ''; applyFilters()">×</button>
+                                </span>
+                                <span
+                                    v-if="filters.price_min || filters.price_max"
+                                    class="inline-flex items-center gap-1 rounded-full bg-blue-100 px-3 py-1 text-xs font-semibold text-blue-700"
+                                >
+                                    {{ filters.price_min || 0 }}₽ - {{ filters.price_max || '∞' }}₽
+                                    <button @click="filters.price_min = null; filters.price_max = null; applyFilters()">×</button>
+                                </span>
+                            </div>
                         </div>
                     </div>
-                </div>
-                
-                <!-- Активные фильтры -->
-                <div v-if="hasActiveFilters" class="mt-4 flex flex-wrap gap-2">
-                    <span
-                        v-if="filters.category_id"
-                        class="inline-flex items-center gap-1 rounded-full bg-blue-100 px-3 py-1 text-xs font-semibold text-blue-700"
-                    >
-                        {{ categoryMap[filters.category_id] }}
-                        <button @click="filters.category_id = ''; applyFilters()">×</button>
-                    </span>
-                    <span
-                        v-if="filters.brand_id"
-                        class="inline-flex items-center gap-1 rounded-full bg-blue-100 px-3 py-1 text-xs font-semibold text-blue-700"
-                    >
-                        {{ brandMap[filters.brand_id] }}
-                        <button @click="filters.brand_id = ''; applyFilters()">×</button>
-                    </span>
-                    <span
-                        v-if="filters.gender"
-                        class="inline-flex items-center gap-1 rounded-full bg-blue-100 px-3 py-1 text-xs font-semibold text-blue-700"
-                    >
-                        {{ getGenderLabel(filters.gender) }}
-                        <button @click="filters.gender = ''; applyFilters()">×</button>
-                    </span>
-                    <span
-                        v-if="filters.price_min || filters.price_max"
-                        class="inline-flex items-center gap-1 rounded-full bg-blue-100 px-3 py-1 text-xs font-semibold text-blue-700"
-                    >
-                        {{ filters.price_min || 0 }}₽ - {{ filters.price_max || '∞' }}₽
-                        <button @click="filters.price_min = null; filters.price_max = null; applyFilters()">×</button>
-                    </span>
-                </div>
-            </div>
+                </aside>
 
-            <!-- Товары -->
-            <!-- Скелетоны при загрузке -->
-            <div v-if="loading" class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                <div
-                    v-for="i in 8"
-                    :key="i"
-                    class="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-gray-900/5"
-                >
-                    <div class="mb-4 aspect-square animate-pulse rounded-xl bg-gray-200"></div>
-                    <div class="h-5 w-3/4 animate-pulse rounded bg-gray-200"></div>
-                    <div class="mt-2 h-3 w-1/2 animate-pulse rounded bg-gray-200"></div>
-                    <div class="mt-3 h-6 w-1/3 animate-pulse rounded bg-gray-200"></div>
-                    <div class="mt-4 h-10 w-full animate-pulse rounded-xl bg-gray-200"></div>
-                </div>
-            </div>
+                <!-- Основной контент -->
+                <div class="flex-1">
+                    <!-- Товары -->
+                    <!-- Скелетоны при загрузке -->
+                    <div v-if="loading" class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                        <div
+                            v-for="i in 8"
+                            :key="i"
+                            class="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-gray-900/5"
+                        >
+                            <div class="mb-4 aspect-square animate-pulse rounded-xl bg-gray-200"></div>
+                            <div class="h-5 w-3/4 animate-pulse rounded bg-gray-200"></div>
+                            <div class="mt-2 h-3 w-1/2 animate-pulse rounded bg-gray-200"></div>
+                            <div class="mt-3 h-6 w-1/3 animate-pulse rounded bg-gray-200"></div>
+                            <div class="mt-4 h-10 w-full animate-pulse rounded-xl bg-gray-200"></div>
+                        </div>
+                    </div>
 
-            <div v-else-if="!sortedAndFilteredProducts.length" class="rounded-2xl bg-white p-8 text-center shadow-sm ring-1 ring-gray-900/5">
-                <p class="text-gray-500">Товары не найдены</p>
-            </div>
+                    <div v-else-if="!sortedAndFilteredProducts.length" class="rounded-2xl bg-white p-8 text-center shadow-sm ring-1 ring-gray-900/5">
+                        <p class="text-gray-500">Товары не найдены</p>
+                    </div>
 
-            <div v-else>
-                <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                    <div v-else>
+                        <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
                 <article
                     v-for="product in paginatedProducts"
                     :key="product.id"
-                    class="group rounded-2xl bg-white p-5 shadow-sm ring-1 ring-gray-900/5 transition-all hover:shadow-md"
+                    class="flex flex-col group rounded-2xl bg-white p-5 shadow-sm ring-1 ring-gray-900/5 transition-all hover:shadow-md"
                 >
                     <router-link :to="`/product/${product.id}`" class="block">
                         <div class="mb-4 aspect-square overflow-hidden rounded-xl bg-gray-100 relative">
@@ -187,7 +220,7 @@
                         {{ categoryMap[product.category_id] ?? '—' }}
                     </p>
                     
-                    <div class="mt-3">
+                    <div class="mt-3 mb-4">
                         <div class="flex items-center gap-2">
                             <p 
                                 v-if="product.discount_type !== 'none' && product.discount_value"
@@ -212,7 +245,7 @@
                     </div>
                     
                     <!-- Кнопки добавления в корзину -->
-                    <div class="mt-4">
+                    <div class="mt-auto">
                         <!-- Если товар НЕ в корзине - показываем кнопку "В корзину" -->
                         <button
                             v-if="!isInCart(product.id)"
@@ -246,10 +279,10 @@
                         </div>
                     </div>
                 </article>
-            </div>
+                        </div>
 
-            <!-- Пагинация -->
-            <div v-if="totalPages > 1" class="mt-8 flex justify-center">
+                        <!-- Пагинация -->
+                        <div v-if="totalPages > 1" class="mt-8 flex justify-center">
                 <div class="flex items-center gap-2">
                     <button
                         class="rounded-lg border border-gray-300 px-4 py-2 text-sm font-semibold text-gray-700 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
@@ -278,8 +311,10 @@
                     >
                         Вперед →
                     </button>
+                        </div>
+                        </div>
+                    </div>
                 </div>
-            </div>
             </div>
         </main>
 
@@ -532,6 +567,129 @@
             </div>
         </transition>
 
+        <!-- Мобильные фильтры -->
+        <transition name="slide">
+            <div
+                v-if="showMobileFilters"
+                class="fixed inset-0 z-50 flex items-end justify-center bg-black/40 backdrop-blur-sm lg:hidden"
+                @click.self="showMobileFilters = false"
+            >
+                <div class="max-h-[85vh] w-full overflow-y-auto rounded-t-3xl bg-white shadow-xl">
+                    <div class="sticky top-0 z-10 flex items-center justify-between border-b border-gray-200 bg-white p-4">
+                        <h3 class="text-lg font-bold text-gray-900">Фильтры</h3>
+                        <button
+                            class="text-gray-600 hover:text-gray-900"
+                            @click="showMobileFilters = false"
+                        >
+                            <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </div>
+
+                    <div class="p-4 space-y-6">
+                        <!-- Сортировка -->
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-900 mb-2">Сортировка</label>
+                            <select
+                                v-model="sortBy"
+                                class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+                            >
+                                <option value="newest">Сначала новые</option>
+                                <option value="price_asc">Цена: дешевле</option>
+                                <option value="price_desc">Цена: дороже</option>
+                            </select>
+                        </div>
+
+                        <!-- Категория -->
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-900 mb-2">Категория</label>
+                            <select
+                                v-model="filters.category_id"
+                                class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+                                @change="applyFilters"
+                            >
+                                <option value="">Все категории</option>
+                                <option v-for="category in categories" :key="category.id" :value="category.id">
+                                    {{ category.name }}
+                                </option>
+                            </select>
+                        </div>
+                        
+                        <!-- Бренд -->
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-900 mb-2">Бренд</label>
+                            <select
+                                v-model="filters.brand_id"
+                                class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+                                @change="applyFilters"
+                            >
+                                <option value="">Все бренды</option>
+                                <option v-for="brand in brands" :key="brand.id" :value="brand.id">
+                                    {{ brand.name }}
+                                </option>
+                            </select>
+                        </div>
+                        
+                        <!-- Пол -->
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-900 mb-2">Пол</label>
+                            <select
+                                v-model="filters.gender"
+                                class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+                                @change="applyFilters"
+                            >
+                                <option value="">Все</option>
+                                <option value="male">Мужской</option>
+                                <option value="female">Женский</option>
+                                <option value="unisex">Унисекс</option>
+                            </select>
+                        </div>
+                        
+                        <!-- Цена -->
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-900 mb-2">Цена</label>
+                            <div class="space-y-2">
+                                <input
+                                    v-model.number="filters.price_min"
+                                    type="number"
+                                    min="0"
+                                    placeholder="От"
+                                    class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+                                    @input="applyFilters"
+                                />
+                                <input
+                                    v-model.number="filters.price_max"
+                                    type="number"
+                                    min="0"
+                                    placeholder="До"
+                                    class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+                                    @input="applyFilters"
+                                />
+                            </div>
+                        </div>
+
+                        <!-- Кнопки действий -->
+                        <div class="flex gap-3 border-t border-gray-200 pt-4">
+                            <button
+                                v-if="hasActiveFilters"
+                                class="flex-1 rounded-xl border border-gray-300 px-4 py-3 text-sm font-semibold text-gray-700 transition hover:bg-gray-50"
+                                @click="resetFilters"
+                            >
+                                Сбросить
+                            </button>
+                            <button
+                                class="flex-1 rounded-xl bg-blue-500 px-4 py-3 text-sm font-semibold text-white transition hover:bg-blue-600"
+                                @click="showMobileFilters = false"
+                            >
+                                Применить
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </transition>
+
         <!-- Модалка авторизации -->
         <CustomerAuthModal
             :show="showAuthModal"
@@ -559,14 +717,17 @@
             @success="onOrderSuccess"
             @show-auth="showAuthModal = true; showCheckoutModal = false"
         />
+
+        <!-- Футер -->
+        <AppFooter />
     </div>
 </template>
 
 <script setup>
 import axios from 'axios';
 import { computed, onMounted, reactive, ref, watch } from 'vue';
+import AppFooter from './AppFooter.vue';
 import { useRouter } from 'vue-router';
-import { themeConfig } from '../config/theme.js';
 import { useCart } from '../composables/useCart.js';
 import { useFavorites } from '../composables/useFavorites.js';
 import CustomerAuthModal from './CustomerAuthModal.vue';
@@ -574,12 +735,13 @@ import AppHeader from './AppHeader.vue';
 import SizeSelectionModal from './SizeSelectionModal.vue';
 import CheckoutModal from './CheckoutModal.vue';
 import CartSidebar from './CartSidebar.vue';
+import { useToast } from '../composables/useToast.js';
+import { useTheme } from '../composables/useTheme.js';
 
 const router = useRouter();
 const { cart, cartItemsCount, saveCart, clearCart } = useCart();
 const { favorites, favoritesCount, isInFavorites: checkInFavorites, addToFavorites, removeFromFavorites, loadFavorites } = useFavorites();
-
-const colors = themeConfig;
+const { theme: colors } = useTheme();
 
 const stores = ref([]);
 const categories = ref([]);
@@ -587,6 +749,7 @@ const brands = ref([]);
 const products = ref([]);
 const showCart = ref(false);
 const loading = ref(false);
+const showMobileFilters = ref(false);
 
 const productModal = reactive({
     open: false,
@@ -771,6 +934,15 @@ const visiblePages = computed(() => {
 const hasActiveFilters = computed(() => {
     return filters.category_id || filters.brand_id || filters.gender || 
            filters.price_min !== null || filters.price_max !== null;
+});
+
+const activeFiltersCount = computed(() => {
+    let count = 0;
+    if (filters.category_id) count++;
+    if (filters.brand_id) count++;
+    if (filters.gender) count++;
+    if (filters.price_min !== null || filters.price_max !== null) count++;
+    return count;
 });
 
 const resetFilters = () => {
@@ -1072,7 +1244,7 @@ const formatPrice = (value) => {
 };
 
 // Проверка авторизации клиента
-const checkCustomerAuth = () => {
+const checkCustomerAuth = async () => {
     const phone = localStorage.getItem('customer_phone');
     const customerData = localStorage.getItem('customer_data');
     
@@ -1085,6 +1257,8 @@ const checkCustomerAuth = () => {
         } catch (e) {
             customerName.value = phone;
         }
+        // Загружаем избранное для авторизованного пользователя
+        await loadFavorites();
     }
 };
 
@@ -1111,10 +1285,14 @@ const toggleFavorite = async (productId) => {
         return;
     }
     
+    const { success: showSuccess } = useToast();
+    
     if (isInFavorites(productId)) {
         await removeFromFavorites(productId);
+        showSuccess('Товар удален из избранного');
     } else {
         await addToFavorites(productId);
+        showSuccess('Товар добавлен в избранное');
     }
 };
 
@@ -1177,10 +1355,11 @@ const openCheckout = () => {
 };
 
 // Успешное оформление заказа
-const onOrderSuccess = () => {
+const onOrderSuccess = async () => {
     clearCart();
     showCheckoutModal.value = false;
-    alert('Заказ успешно оформлен! Мы свяжемся с вами в ближайшее время.');
+    // Обновляем список товаров
+    await fetchProducts();
 };
 
 // Сброс страницы при изменении фильтров или сортировки
@@ -1189,7 +1368,7 @@ watch([filters, sortBy], () => {
 }, { deep: true });
 
 onMounted(async () => {
-    checkCustomerAuth();
+    await checkCustomerAuth();
     await Promise.all([fetchStores(), fetchCategories(), fetchBrands(), fetchProducts()]);
 });
 </script>
@@ -1241,5 +1420,28 @@ onMounted(async () => {
 .fade-leave-to > div {
     transform: scale(0.95);
     opacity: 0;
+}
+
+.slide-enter-active,
+.slide-leave-active {
+    transition: opacity 0.3s ease;
+}
+
+.slide-enter-from,
+.slide-leave-to {
+    opacity: 0;
+}
+
+.slide-enter-active > div,
+.slide-leave-active > div {
+    transition: transform 0.3s ease;
+}
+
+.slide-enter-from > div {
+    transform: translateY(100%);
+}
+
+.slide-leave-to > div {
+    transform: translateY(100%);
 }
 </style>

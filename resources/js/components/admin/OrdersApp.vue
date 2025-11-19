@@ -74,7 +74,7 @@
                                 <p><strong>Дата:</strong> {{ formatDate(order.created_at) }}</p>
                             </div>
 
-                            <div class="mt-3 space-y-2">
+                            <div class="mt-2 space-y-2">
                                 <p class="text-sm font-semibold text-gray-700">Товары:</p>
                                 <ul class="space-y-1">
                                     <li
@@ -82,7 +82,7 @@
                                         :key="item.id"
                                         class="text-sm text-gray-600"
                                     >
-                                        {{ item.product?.name || 'Товар удален' }}
+                                        - {{ item.product?.name || 'Товар удален' }}
                                         <span v-if="item.size" class="text-xs">({{ item.size }})</span>
                                         × {{ item.quantity }} = {{ formatPrice(item.price * item.quantity) }}
                                     </li>
@@ -127,9 +127,11 @@
 <script setup>
 import axios from 'axios';
 import { computed, onMounted, reactive, ref } from 'vue';
-import { themeConfig } from '../../config/theme.js';
+import { useToast } from '../../composables/useToast.js';
+import { useTheme } from '../../composables/useTheme.js';
 
-const colors = themeConfig;
+const { theme: colors } = useTheme();
+const { success: showSuccess, error: showError } = useToast();
 
 const orders = ref([]);
 const loading = ref(false);
@@ -140,12 +142,12 @@ const alerts = reactive({
     error: '',
 });
 
-const statuses = [
-    { value: 'all', label: 'Все', color: colors.neutral[500] },
-    { value: 'pending', label: 'Ожидают', color: colors.primary[500] },
-    { value: 'confirmed', label: 'Подтверждены', color: colors.accent[500] },
-    { value: 'cancelled', label: 'Отменены', color: colors.error },
-];
+const statuses = computed(() => [
+    { value: 'all', label: 'Все', color: colors.value.neutral[500] },
+    { value: 'pending', label: 'Ожидают', color: colors.value.primary[500] },
+    { value: 'confirmed', label: 'Подтверждены', color: colors.value.accent[500] },
+    { value: 'cancelled', label: 'Отменены', color: colors.value.error },
+]);
 
 const handleResponseData = (response) => response?.data?.data ?? response?.data ?? [];
 
@@ -180,10 +182,14 @@ const updateStatus = async (orderId, status) => {
 
     try {
         await axios.post(`/api/orders/${orderId}/status`, { status });
-        alerts.success = status === 'confirmed' ? 'Заказ подтвержден' : 'Заказ отменен';
+        const successMsg = status === 'confirmed' ? 'Заказ подтвержден' : 'Заказ отменен';
+        showSuccess(successMsg);
+        alerts.success = successMsg;
         await fetchOrders();
     } catch (error) {
-        alerts.error = error?.response?.data?.error ?? 'Не удалось обновить статус заказа.';
+        const errorMsg = error?.response?.data?.error ?? 'Не удалось обновить статус заказа.';
+        alerts.error = errorMsg;
+        showError(errorMsg);
     }
 };
 
@@ -197,21 +203,24 @@ const deleteOrder = async (orderId) => {
 
     try {
         await axios.delete(`/api/orders/${orderId}`);
+        showSuccess('Заказ успешно удален');
         alerts.success = 'Заказ удален';
         await fetchOrders();
     } catch (error) {
-        alerts.error = error?.response?.data?.error ?? 'Не удалось удалить заказ.';
+        const errorMsg = error?.response?.data?.error ?? 'Не удалось удалить заказ.';
+        alerts.error = errorMsg;
+        showError(errorMsg);
     }
 };
 
 const getStatusLabel = (status) => {
-    const statusObj = statuses.find(s => s.value === status);
+    const statusObj = statuses.value.find(s => s.value === status);
     return statusObj?.label || status;
 };
 
 const getStatusColor = (status) => {
-    const statusObj = statuses.find(s => s.value === status);
-    return statusObj?.color || colors.neutral[500];
+    const statusObj = statuses.value.find(s => s.value === status);
+    return statusObj?.color || colors.value.neutral[500];
 };
 
 const formatPrice = (value) => {

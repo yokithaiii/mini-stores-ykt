@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Order;
 use App\Models\OrderItem;
+use App\Helpers\PhoneHelper;
 use App\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -16,7 +17,8 @@ class OrderController extends Controller
         $phone = $request->header('X-Customer-Phone');
         
         if ($phone) {
-            $customer = \App\Models\Customer::where('phone', $phone)->first();
+            $phoneNormalized = PhoneHelper::normalize($phone);
+            $customer = \App\Models\Customer::where('phone', $phoneNormalized)->first();
             
             if (!$customer) {
                 return response()->json(['error' => 'Клиент не найден'], 404);
@@ -58,7 +60,8 @@ class OrderController extends Controller
             $customerId = null;
             $phone = $request->header('X-Customer-Phone');
             if ($phone) {
-                $customer = \App\Models\Customer::where('phone', $phone)->first();
+                $phoneNormalized = PhoneHelper::normalize($phone);
+                $customer = \App\Models\Customer::where('phone', $phoneNormalized)->first();
                 if ($customer) {
                     $customerId = $customer->id;
                 }

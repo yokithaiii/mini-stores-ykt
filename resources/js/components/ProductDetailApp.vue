@@ -11,6 +11,23 @@
         />
 
         <main class="mx-auto max-w-7xl px-4 py-8">
+            <!-- Хлебные крошки -->
+            <nav v-if="!loading && product" class="mb-6 flex items-center gap-2 text-sm">
+                <router-link to="/" class="text-gray-600 hover:text-blue-600 transition">
+                    Главная
+                </router-link>
+                <svg class="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                </svg>
+                <span v-if="product.category" class="text-gray-600">
+                    {{ product.category.name }}
+                </span>
+                <svg v-if="product.category" class="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                </svg>
+                <span class="font-semibold text-gray-900">{{ product.name }}</span>
+            </nav>
+
             <!-- Скелетон загрузки -->
             <div v-if="loading" class="rounded-2xl bg-white p-8 shadow-sm ring-1 ring-gray-900/5">
                 <div class="grid gap-8 lg:grid-cols-2">
@@ -225,14 +242,18 @@
             @close="showAuthModal = false"
             @success="onAuthSuccess"
         />
+
+        <!-- Футер -->
+        <AppFooter />
     </div>
 </template>
 
 <script setup>
+import AppFooter from './AppFooter.vue';
 import axios from 'axios';
 import { computed, onMounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import { themeConfig } from '../config/theme.js';
+import { useTheme } from '../composables/useTheme.js';
 import { useCart } from '../composables/useCart.js';
 import { useFavorites } from '../composables/useFavorites.js';
 import CartSidebar from './CartSidebar.vue';
@@ -244,8 +265,7 @@ const route = useRoute();
 const router = useRouter();
 const { cart, cartItemsCount, saveCart, clearCart } = useCart();
 const { favoritesCount } = useFavorites();
-
-const colors = themeConfig;
+const { theme: colors } = useTheme();
 
 const product = ref(null);
 const loading = ref(true);

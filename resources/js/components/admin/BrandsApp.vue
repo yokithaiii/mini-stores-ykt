@@ -144,9 +144,11 @@
 <script setup>
 import axios from 'axios';
 import { onMounted, reactive, ref } from 'vue';
-import { themeConfig } from '../../config/theme.js';
+import { useToast } from '../../composables/useToast.js';
+import { useTheme } from '../../composables/useTheme.js';
 
-const colors = themeConfig;
+const { theme: colors } = useTheme();
+const { success: showSuccess, error: showError } = useToast();
 
 const brands = ref([]);
 const loading = ref(false);
@@ -226,9 +228,11 @@ const saveBrand = async () => {
     try {
         if (form.id) {
             await axios.post(`/api/brands/${form.id}`, payload);
+            showSuccess('Бренд успешно обновлен');
             alerts.success = 'Бренд обновлен';
         } else {
             await axios.post('/api/brands', payload);
+            showSuccess('Бренд успешно создан');
             alerts.success = 'Бренд создан';
         }
         await fetchBrands();
@@ -248,10 +252,13 @@ const deleteBrand = async (id) => {
     }
     try {
         await axios.delete(`/api/brands/${id}`);
+        showSuccess('Бренд успешно удален');
         alerts.success = 'Бренд удален';
         await fetchBrands();
     } catch (error) {
-        alerts.error = error?.response?.data?.error ?? 'Не удалось удалить бренд.';
+        const errorMsg = error?.response?.data?.error ?? 'Не удалось удалить бренд.';
+        alerts.error = errorMsg;
+        showError(errorMsg);
     }
 };
 

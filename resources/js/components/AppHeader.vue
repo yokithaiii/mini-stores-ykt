@@ -3,8 +3,7 @@
         <div class="mx-auto max-w-7xl px-4 py-4">
             <div class="flex items-center justify-between">
                 <router-link to="/" class="flex items-center gap-2">
-                    <h1 class="text-2xl font-bold text-gray-900">Mini Stores</h1>
-                    <p class="text-sm text-gray-600 hidden sm:block">Интернет-магазин</p>
+                    <h1 class="text-2xl font-bold text-gray-900">{{ storeName }}</h1>
                 </router-link>
                 
                 <div class="flex items-center gap-3">
@@ -67,7 +66,7 @@
                     
                     <!-- Админка -->
                     <a
-                        href="/auth"
+                        href="/admin"
                         class="hidden sm:flex h-10 w-10 items-center justify-center rounded-xl border border-gray-300 text-gray-700 transition hover:bg-gray-50"
                         title="Админка"
                     >
@@ -83,9 +82,13 @@
 </template>
 
 <script setup>
-import { themeConfig } from '../config/theme.js';
+import { useTheme } from '../composables/useTheme.js';
 
-const colors = themeConfig;
+const { theme: colors } = useTheme();
+
+import { ref, onMounted } from 'vue';
+import { useRouter } from 'vue-router';
+import axios from 'axios';
 
 defineProps({
     isCustomerLoggedIn: Boolean,
@@ -96,11 +99,23 @@ defineProps({
 
 defineEmits(['toggle-cart', 'show-auth']);
 
-import { useRouter } from 'vue-router';
-
 const router = useRouter();
+const storeName = ref('');
+
+const loadStoreSettings = async () => {
+    try {
+        const response = await axios.get('/api/settings');
+        storeName.value = response.data.store_name || 'Mini Stores';
+    } catch (err) {
+        console.error('Failed to load store settings', err);
+    }
+};
 
 const goToProfile = () => {
     router.push('/profile');
 };
+
+onMounted(() => {
+    loadStoreSettings();
+});
 </script>

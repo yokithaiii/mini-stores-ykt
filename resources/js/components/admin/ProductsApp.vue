@@ -17,14 +17,13 @@
                     >
                         Обновить список
                     </button>
-                    <button
+                    <router-link
+                        to="/admin/products/create"
                         class="rounded-xl px-6 py-3 text-sm font-semibold text-white shadow-sm transition-all hover:shadow-md"
                         :style="{ backgroundColor: colors.primary[500] }"
-                        type="button"
-                        @click="openModal()"
                     >
                         Новый товар
-                    </button>
+                    </router-link>
                 </div>
             </div>
         </section>
@@ -84,13 +83,12 @@
                             </div>
                         </div>
                         <div class="flex gap-2">
-                            <button
+                            <router-link
+                                :to="`/admin/products/${product.id}/edit`"
                                 class="rounded-lg border border-gray-300 px-4 py-2 text-sm font-semibold text-gray-700 transition hover:bg-white"
-                                type="button"
-                                @click="openModal(product)"
                             >
                                 Изменить
-                            </button>
+                            </router-link>
                             <button
                                 class="rounded-lg border border-red-200 px-4 py-2 text-sm font-semibold text-red-600 transition hover:bg-red-50"
                                 type="button"
@@ -109,7 +107,7 @@
                 v-if="modal.open"
                 class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4 py-6 backdrop-blur-sm"
             >
-                <div class="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl bg-white p-6 shadow-xl ring-1 ring-gray-900/10">
+                <div class="max-h-[90vh] w-full max-w-[90vw] overflow-y-auto rounded-2xl bg-white p-6 shadow-xl ring-1 ring-gray-900/10">
                     <div class="flex items-center justify-between">
                         <div>
                             <p class="text-xs font-medium uppercase tracking-wider" :style="{ color: colors.primary[600] }">Товары</p>
@@ -437,9 +435,11 @@
 <script setup>
 import axios from 'axios';
 import { computed, onMounted, reactive, ref } from 'vue';
-import { themeConfig } from '../../config/theme.js';
+import { useToast } from '../../composables/useToast.js';
+import { useTheme } from '../../composables/useTheme.js';
 
-const colors = themeConfig;
+const { theme: colors } = useTheme();
+const { success: showSuccess, error: showError } = useToast();
 
 const stores = ref([]);
 const categories = ref([]);
@@ -726,10 +726,13 @@ const deleteProduct = async (id) => {
     }
     try {
         await axios.delete(`/api/products/${id}`);
+        showSuccess('Товар успешно удален');
         alerts.success = 'Товар удалён';
         await fetchProducts();
     } catch (error) {
-        alerts.error = error?.response?.data?.error ?? 'Не удалось удалить товар.';
+        const errorMsg = error?.response?.data?.error ?? 'Не удалось удалить товар.';
+        alerts.error = errorMsg;
+        showError(errorMsg);
     }
 };
 

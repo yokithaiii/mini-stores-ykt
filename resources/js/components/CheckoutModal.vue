@@ -55,6 +55,7 @@
                             Телефон <span class="text-red-500">*</span>
                         </label>
                         <input
+                            ref="phoneInput"
                             v-model="form.phone"
                             type="tel"
                             required
@@ -119,9 +120,14 @@
 <script setup>
 import { reactive, ref, watch } from 'vue';
 import axios from 'axios';
-import { themeConfig } from '../config/theme.js';
+import { usePhoneMask } from '../composables/usePhoneMask.js';
+import { useToast } from '../composables/useToast.js';
+import { normalizePhone } from '../utils/phoneUtils.js';
+import { useTheme } from '../composables/useTheme.js';
 
-const colors = themeConfig;
+const { theme: colors } = useTheme();
+const phoneInput = ref(null);
+const { success: showSuccess, error: showError } = useToast();
 
 const props = defineProps({
     show: Boolean,
@@ -184,7 +190,7 @@ const submitOrder = async () => {
 
         const orderData = {
             customer_name: form.name,
-            customer_phone: form.phone,
+            customer_phone: normalizePhone(form.phone),
             items: props.items.map(item => ({
                 product_id: item.id,
                 quantity: item.cartQuantity,
@@ -194,14 +200,20 @@ const submitOrder = async () => {
 
         await axios.post('/api/orders', orderData, { headers });
 
+        showSuccess('Заказ успешно оформлен! Мы свяжемся с вами в ближайшее время.', 5000);
         emit('success');
         emit('close');
     } catch (err) {
-        error.value = err.response?.data?.error || 'Ошибка при оформлении заказа';
+        const errorMsg = err.response?.data?.error || 'Ошибка при оформлении заказа';
+        error.value = errorMsg;
+        showError(errorMsg);
     } finally {
         loading.value = false;
     }
 };
+
+// Инициализируем маску телефона
+usePhoneMask(phoneInput);
 
 // Автозаполнение для авторизованных пользователей
 watch(() => props.show, (newVal) => {

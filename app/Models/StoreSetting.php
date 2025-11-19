@@ -1,0 +1,39 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+
+class StoreSetting extends Model
+{
+    protected $fillable = [
+        'key',
+        'value',
+        'type',
+        'group',
+    ];
+
+    public static function get($key, $default = null)
+    {
+        $setting = self::where('key', $key)->first();
+        return $setting ? $setting->value : $default;
+    }
+
+    public static function set($key, $value, $type = 'text', $group = 'general')
+    {
+        return self::updateOrCreate(
+            ['key' => $key],
+            ['value' => $value, 'type' => $type, 'group' => $group]
+        );
+    }
+
+    public static function getByGroup($group)
+    {
+        return self::where('group', $group)->get()->pluck('value', 'key');
+    }
+
+    public static function getAll()
+    {
+        return self::all()->pluck('value', 'key');
+    }
+}

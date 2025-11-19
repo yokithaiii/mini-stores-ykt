@@ -4,11 +4,14 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BrandController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\CustomerAuthController;
+use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\FavoriteController;
 use App\Http\Controllers\ImageController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\StatisticsController;
 use App\Http\Controllers\StoreController;
+use App\Http\Controllers\StoreSettingController;
 use App\Http\Controllers\TestController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -53,6 +56,12 @@ Route::prefix('orders')->group(function () {
     Route::post('/', [OrderController::class, 'store']);
     Route::get('/', [OrderController::class, 'index']); // Для клиентов тоже
 });
+
+// Store settings (public)
+Route::get('/settings', [StoreSettingController::class, 'getPublic']);
+
+// Theme settings (public)
+Route::get('/theme', [\App\Http\Controllers\ThemeController::class, 'index']);
 
 // Customer auth routes (авторизация клиентов)
 Route::prefix('customer')->group(function () {
@@ -120,6 +129,21 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/', [BrandController::class, 'store']);
         Route::post('/{brand}', [BrandController::class, 'update']);
         Route::delete('/{brand}', [BrandController::class, 'destroy']);
+    });
+
+    // Statistics routes (только для админов)
+    Route::get('/statistics', [StatisticsController::class, 'index']);
+
+    // Store settings routes (только для админов)
+    Route::prefix('admin/settings')->group(function () {
+        Route::get('/', [StoreSettingController::class, 'index']);
+        Route::post('/', [StoreSettingController::class, 'update']);
+    });
+
+    // Customers routes (только для админов)
+    Route::prefix('customers')->group(function () {
+        Route::get('/', [CustomerController::class, 'index']);
+        Route::get('/{customer}', [CustomerController::class, 'show']);
     });
 
 });

@@ -17,6 +17,8 @@
         "vue": "^3.5.12"
     },
     "dependencies": {
+        "chart.js": "^4.5.1",
+        "imask": "^7.6.1",
         "vue-router": "^4.6.3"
     }
 }

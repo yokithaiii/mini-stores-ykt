@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Customer;
+use App\Helpers\PhoneHelper;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
@@ -14,14 +15,20 @@ class CustomerAuthController extends Controller
     {
         $request->validate([
             'phone' => 'required|string|regex:/^\+?[0-9]{10,15}$/',
+            'name' => 'required|string|max:255',
         ]);
 
-        $phone = $request->phone;
+        // Нормализуем номер телефона
+        $phone = PhoneHelper::normalize($request->phone);
+        
+        if (!PhoneHelper::isValid($phone)) {
+            return response()->json(['error' => 'Неверный формат номера телефона'], 400);
+        }
         
         // Находим или создаем клиента
         $customer = Customer::firstOrCreate(
             ['phone' => $phone],
-            ['name' => null, 'email' => null]
+            ['name' => $request->name, 'email' => null]
         );
 
         // Генерируем код (пока всегда 1111)
@@ -49,7 +56,10 @@ class CustomerAuthController extends Controller
             'code' => 'required|string|size:4',
         ]);
 
-        $customer = Customer::where('phone', $request->phone)->first();
+        // Нормализуем номер телефона
+        $phone = PhoneHelper::normalize($request->phone);
+        
+        $customer = Customer::where('phone', $phone)->first();
 
         if (!$customer) {
             return response()->json(['error' => 'Клиент не найден'], 404);
@@ -92,6 +102,9 @@ class CustomerAuthController extends Controller
             return response()->json(['error' => 'Не авторизован'], 401);
         }
 
+        // Нормализуем номер телефона
+        $phone = PhoneHelper::normalize($phone);
+        
         $customer = Customer::where('phone', $phone)->first();
 
         if (!$customer) {
@@ -110,6 +123,9 @@ class CustomerAuthController extends Controller
             return response()->json(['error' => 'Не авторизован'], 401);
         }
 
+        // Нормализуем номер телефона
+        $phone = PhoneHelper::normalize($phone);
+        
         $customer = Customer::where('phone', $phone)->first();
 
         if (!$customer) {
@@ -117,7 +133,7 @@ class CustomerAuthController extends Controller
         }
 
         $request->validate([
-            'name' => 'nullable|string|max:255',
+            'name' => 'required|string|max:255',
             'email' => 'nullable|email|max:255',
         ]);
 

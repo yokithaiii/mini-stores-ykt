@@ -6,9 +6,12 @@ const favorites = ref([]);
 const isLoaded = ref(false);
 
 export function useFavorites() {
-    const loadFavorites = async () => {
+    const loadFavorites = async (force = false) => {
         const phone = localStorage.getItem('customer_phone');
-        if (!phone || isLoaded.value) return;
+        if (!phone) return;
+        
+        // Если уже загружено и не принудительная перезагрузка - пропускаем
+        if (isLoaded.value && !force) return;
         
         try {
             const response = await axios.get('/api/favorites', {
@@ -20,6 +23,8 @@ export function useFavorites() {
             isLoaded.value = true;
         } catch (error) {
             console.error('Ошибка загрузки избранного:', error);
+            // Сбрасываем флаг при ошибке, чтобы можно было попробовать снова
+            isLoaded.value = false;
         }
     };
 

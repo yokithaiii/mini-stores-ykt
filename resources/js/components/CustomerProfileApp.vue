@@ -250,25 +250,30 @@
             @success="onOrderSuccess"
             @show-auth="() => {}"
         />
+
+        <!-- Футер -->
+        <AppFooter />
     </div>
 </template>
 
 <script setup>
+import AppFooter from './AppFooter.vue';
 import axios from 'axios';
 import { computed, onMounted, reactive, ref } from 'vue';
 import { useRouter } from 'vue-router';
-import { themeConfig } from '../config/theme.js';
+import { useTheme } from '../composables/useTheme.js';
 import { useCart } from '../composables/useCart.js';
 import { useFavorites } from '../composables/useFavorites.js';
 import CartSidebar from './CartSidebar.vue';
 import AppHeader from './AppHeader.vue';
 import CheckoutModal from './CheckoutModal.vue';
+import { useToast } from '../composables/useToast.js';
 
 const router = useRouter();
+const { success: showSuccess, error: showError } = useToast();
 const { cart, cartItemsCount, clearCart } = useCart();
 const { favoritesCount } = useFavorites();
-
-const colors = themeConfig;
+const { theme: colors } = useTheme();
 
 const customer = ref({});
 const orders = ref([]);
@@ -360,6 +365,7 @@ const updateProfile = async () => {
         });
         customer.value = response.data.customer;
         localStorage.setItem('customer_data', JSON.stringify(response.data.customer));
+        showSuccess('Профиль успешно обновлен');
         successMessage.value = 'Профиль обновлен';
         
         setTimeout(() => {
@@ -381,14 +387,18 @@ const removeFromFavorites = async (productId) => {
             },
         });
         favorites.value = favorites.value.filter(p => p.id !== productId);
+        showSuccess('Товар удален из избранного');
     } catch (error) {
         console.error(error);
+        showError('Не удалось удалить из избранного');
     }
 };
 
 const logout = () => {
     localStorage.removeItem('customer_phone');
     localStorage.removeItem('customer_data');
+    clearFavorites();
+    clearCart();
     router.push('/');
 };
 
@@ -400,7 +410,6 @@ const openCheckout = () => {
 const onOrderSuccess = async () => {
     clearCart();
     showCheckoutModal.value = false;
-    alert('Заказ успешно оформлен!');
     await fetchOrders(); // Обновляем список заказов
     activeTab.value = 'orders'; // Переключаемся на вкладку заказов
 };

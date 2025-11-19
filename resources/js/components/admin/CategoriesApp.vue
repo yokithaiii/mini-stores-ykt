@@ -161,9 +161,11 @@
 <script setup>
 import axios from 'axios';
 import { computed, onMounted, reactive, ref } from 'vue';
-import { themeConfig } from '../../config/theme.js';
+import { useToast } from '../../composables/useToast.js';
+import { useTheme } from '../../composables/useTheme.js';
 
-const colors = themeConfig;
+const { theme: colors } = useTheme();
+const { success: showSuccess, error: showError } = useToast();
 
 const stores = ref([]);
 const categories = ref([]);
@@ -265,9 +267,11 @@ const saveCategory = async () => {
     try {
         if (form.id) {
             await axios.post(`/api/categories/${form.id}`, payload);
+            showSuccess('Категория успешно обновлена');
             alerts.success = 'Категория обновлена';
         } else {
             await axios.post('/api/categories', payload);
+            showSuccess('Категория успешно создана');
             alerts.success = 'Категория создана';
         }
         await fetchCategories();
@@ -287,10 +291,13 @@ const deleteCategory = async (id) => {
     }
     try {
         await axios.delete(`/api/categories/${id}`);
+        showSuccess('Категория успешно удалена');
         alerts.success = 'Категория удалена';
         await fetchCategories();
     } catch (error) {
-        alerts.error = error?.response?.data?.error ?? 'Не удалось удалить категорию.';
+        const errorMsg = error?.response?.data?.error ?? 'Не удалось удалить категорию.';
+        alerts.error = errorMsg;
+        showError(errorMsg);
     }
 };
 

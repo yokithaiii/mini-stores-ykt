@@ -229,3 +229,295 @@ showCart.value = true;
 ---
 
 **Статус:** Все улучшения применены и протестированы ✅
+
+
+## 19 ноября 2025
+
+### Улучшение #1: Мобильная адаптивность фильтров
+
+**Проблема:**
+- Фильтры на главной странице магазина были доступны только на десктопе
+- На мобильных устройствах не было возможности фильтровать товары
+
+**Решение:**
+Добавлена мобильная версия фильтров с модальным окном:
+
+**Добавлено:**
+- Кнопка "Фильтры" для мобильных устройств (видна только на `lg:hidden`)
+- Счетчик активных фильтров на кнопке
+- Модальное окно с фильтрами, выезжающее снизу
+- Все фильтры из десктопной версии (сортировка, категория, бренд, пол, цена)
+- Кнопки "Сбросить" и "Применить" в мобильной версии
+- Анимация `slide` для плавного появления модального окна
+
+**Файлы:**
+- `resources/js/components/ShopApp.vue`
+
+**Технические детали:**
+```javascript
+// Добавлен ref для управления модальным окном
+const showMobileFilters = ref(false);
+
+// Computed для подсчета активных фильтров
+const activeFiltersCount = computed(() => {
+    let count = 0;
+    if (filters.category_id) count++;
+    if (filters.brand_id) count++;
+    if (filters.gender) count++;
+    if (filters.price_min !== null || filters.price_max !== null) count++;
+    return count;
+});
+```
+
+---
+
+### Улучшение #2: Маски для полей ввода телефона
+
+**Проблема:**
+- Не все поля ввода телефона имели маски
+- Пользователи могли вводить телефон в произвольном формате
+
+**Решение:**
+Добавлены маски телефона во все компоненты с полями ввода телефона:
+
+**Обновленные компоненты:**
+1. `CheckoutModal.vue` - форма оформления заказа
+2. `SettingsApp.vue` - настройки магазина (телефон и WhatsApp)
+
+**Уже имели маски:**
+- `CustomerAuthModal.vue` - авторизация клиента
+
+**Технические детали:**
+```javascript
+// Импорт composable
+import { usePhoneMask } from '../composables/usePhoneMask.js';
+
+// Создание ref для input
+const phoneInput = ref(null);
+
+// Инициализация маски
+usePhoneMask(phoneInput);
+
+// В template
+<input ref="phoneInput" v-model="form.phone" type="tel" ... />
+```
+
+**Формат маски:**
+- `+7 (999) 123-45-67`
+- Автоматическое форматирование при вводе
+- Placeholder с подсказкой формата
+
+**Файлы:**
+- `resources/js/components/CheckoutModal.vue`
+- `resources/js/components/admin/SettingsApp.vue`
+
+---
+
+
+### Улучшение #3: Система Toast-уведомлений
+
+**Проблема:**
+- Использовались стандартные `alert()` для уведомлений
+- Плохой UX - блокирующие диалоги
+- Нет визуальной обратной связи при успешных операциях
+
+**Решение:**
+Создана полноценная система toast-уведомлений:
+
+**Созданные файлы:**
+1. `resources/js/composables/useToast.js` - composable для управления toast
+2. `resources/js/components/ToastContainer.vue` - компонент отображения toast
+
+**Функциональность:**
+- 4 типа уведомлений: success, error, warning, info
+- Автоматическое скрытие через заданное время
+- Анимация появления/исчезновения
+- Возможность закрыть вручную
+- Стек уведомлений (несколько одновременно)
+- Адаптивный дизайн
+
+**Обновленные компоненты:**
+
+**Клиентская часть:**
+- `CheckoutModal.vue` - уведомление при оформлении заказа
+- `CustomerProfileApp.vue` - уведомление при обновлении профиля
+- `ShopApp.vue` - удален старый alert
+
+**Админ-панель:**
+- `ProductFormApp.vue` - создание/редактирование товара
+- `ProductsApp.vue` - удаление товара
+- `CategoriesApp.vue` - создание/редактирование/удаление категории
+- `BrandsApp.vue` - создание/редактирование/удаление бренда
+- `OrdersApp.vue` - изменение статуса/удаление заказа
+- `SettingsApp.vue` - сохранение настроек
+
+**Примеры использования:**
+```javascript
+import { useToast } from '../composables/useToast.js';
+
+const { success, error, warning, info } = useToast();
+
+// Успешная операция
+success('Товар успешно создан!');
+
+// Ошибка
+error('Не удалось сохранить данные');
+
+// Предупреждение
+warning('Заполните все обязательные поля');
+
+// Информация
+info('Загрузка данных...');
+```
+
+**Технические детали:**
+- Позиция: правый верхний угол (fixed)
+- z-index: 9999 (поверх всех элементов)
+- Анимация: slide-in справа
+- Длительность по умолчанию: 3-4 секунды
+- Backdrop blur для лучшей читаемости
+
+**Файлы:**
+- `resources/js/composables/useToast.js`
+- `resources/js/components/ToastContainer.vue`
+- `resources/js/App.vue`
+- `resources/js/AdminApp.vue`
+- Все компоненты с формами и операциями CRUD
+
+---
+
+
+### Исправление #3: Избранное перестало работать после добавления масок телефона
+
+**Проблема:**
+- После добавления масок телефона избранное перестало работать
+- Телефон сохранялся в localStorage с маской `+7 (999) 123-45-67`
+- Сервер ожидал нормализованный формат `79991234567`
+- Избранное не загружалось при авторизации
+
+**Причина:**
+1. Маска телефона сохраняла форматированный номер в localStorage
+2. Сервер не мог найти клиента по форматированному номеру
+3. В `checkCustomerAuth` не вызывался `loadFavorites()`
+
+**Решение:**
+
+**1. Создана утилита нормализации телефона:**
+- `resources/js/utils/phoneUtils.js`
+- Функции: `normalizePhone()`, `formatPhone()`, `isValidPhone()`
+- Нормализация: удаление всех символов кроме цифр, приведение к формату `7XXXXXXXXXX`
+
+**2. Обновлены компоненты:**
+- `CustomerAuthModal.vue` - нормализация телефона перед отправкой и сохранением
+- `CheckoutModal.vue` - нормализация телефона при оформлении заказа
+- `ShopApp.vue` - добавлен вызов `loadFavorites()` в `checkCustomerAuth()`
+- `CustomerProfileApp.vue` - добавлен сброс избранного при выходе
+
+**3. Улучшен composable useFavorites:**
+- Добавлен параметр `force` для принудительной перезагрузки
+- Сброс флага `isLoaded` при ошибке загрузки
+- Улучшена обработка ошибок
+
+**Технические детали:**
+```javascript
+// Нормализация телефона
+import { normalizePhone } from '../utils/phoneUtils.js';
+
+// Было: +7 (999) 123-45-67
+// Стало: 79991234567
+const normalizedPhone = normalizePhone(phone.value);
+localStorage.setItem('customer_phone', normalizedPhone);
+```
+
+**Файлы:**
+- `resources/js/utils/phoneUtils.js` (новый)
+- `resources/js/components/CustomerAuthModal.vue`
+- `resources/js/components/CheckoutModal.vue`
+- `resources/js/components/ShopApp.vue`
+- `resources/js/components/CustomerProfileApp.vue`
+- `resources/js/composables/useFavorites.js`
+
+---
+
+
+### Улучшение #4: Динамическая настройка цветовой схемы
+
+**Задача:**
+- Сделать цвета сайта настраиваемыми из админ-панели
+- Применять изменения в реальном времени без перезагрузки
+
+**Решение:**
+Создана полноценная система динамической настройки темы:
+
+**Созданные файлы:**
+1. `resources/js/composables/useTheme.js` - composable для управления темой
+2. `app/Http/Controllers/ThemeController.php` - API для получения настроек темы
+
+**Функциональность:**
+
+**1. Настройка цветов в админке:**
+- Основной цвет (primary) - для кнопок и ссылок
+- Акцентный цвет (accent) - для цен и важных элементов
+- Цвет успеха (success) - для успешных уведомлений
+- Цвет предупреждения (warning) - для предупреждений
+- Цвет ошибки (error) - для ошибок и удаления
+
+**2. Интерфейс настройки:**
+- Color picker для визуального выбора цвета
+- Текстовое поле для ввода HEX-кода
+- Превью всех цветов в реальном времени
+- Подсказки для каждого цвета
+
+**3. Применение темы:**
+- Автоматическая загрузка при старте приложения
+- CSS переменные для использования в стилях
+- Обновление в реальном времени после сохранения
+- Fallback на дефолтные цвета при ошибке
+
+**Технические детали:**
+
+**API Endpoint:**
+```php
+GET /api/theme
+// Возвращает настройки цветов из базы данных
+```
+
+**CSS переменные:**
+```css
+--color-primary: #3b82f6
+--color-accent: #22c55e
+--color-success: #22c55e
+--color-warning: #f59e0b
+--color-error: #ef4444
+```
+
+**Использование в компонентах:**
+```javascript
+import { useTheme } from './composables/useTheme.js';
+
+const { theme, loadTheme, updateTheme } = useTheme();
+
+// Загрузка темы
+await loadTheme();
+
+// Использование цветов
+:style="{ backgroundColor: theme.primary[500] }"
+```
+
+**Хранение настроек:**
+Цвета сохраняются в таблице `store_settings` с ключами:
+- `theme_primary_color`
+- `theme_accent_color`
+- `theme_success_color`
+- `theme_warning_color`
+- `theme_error_color`
+
+**Файлы:**
+- `resources/js/composables/useTheme.js` (новый)
+- `app/Http/Controllers/ThemeController.php` (новый)
+- `routes/api.php`
+- `resources/js/components/admin/SettingsApp.vue`
+- `resources/js/App.vue`
+- `resources/js/AdminApp.vue`
+
+---

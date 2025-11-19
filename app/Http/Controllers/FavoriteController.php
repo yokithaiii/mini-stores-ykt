@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Customer;
+use App\Helpers\PhoneHelper;
 use App\Models\Favorite;
 use App\Models\Product;
 use Illuminate\Http\Request;
@@ -18,7 +19,8 @@ class FavoriteController extends Controller
             return response()->json(['error' => 'Не авторизован'], 401);
         }
 
-        $customer = Customer::where('phone', $phone)->first();
+        $phoneNormalized = PhoneHelper::normalize($phone);
+        $customer = Customer::where('phone', $phoneNormalized)->first();
 
         if (!$customer) {
             return response()->json(['error' => 'Клиент не найден'], 404);
@@ -41,7 +43,8 @@ class FavoriteController extends Controller
             return response()->json(['error' => 'Не авторизован'], 401);
         }
 
-        $customer = Customer::where('phone', $phone)->first();
+        $phoneNormalized = PhoneHelper::normalize($phone);
+        $customer = Customer::where('phone', $phoneNormalized)->first();
 
         if (!$customer) {
             return response()->json(['error' => 'Клиент не найден'], 404);
@@ -77,7 +80,8 @@ class FavoriteController extends Controller
             return response()->json(['error' => 'Не авторизован'], 401);
         }
 
-        $customer = Customer::where('phone', $phone)->first();
+        $phoneNormalized = PhoneHelper::normalize($phone);
+        $customer = Customer::where('phone', $phoneNormalized)->first();
 
         if (!$customer) {
             return response()->json(['error' => 'Клиент не найден'], 404);
@@ -105,7 +109,8 @@ class FavoriteController extends Controller
             return response()->json(['is_favorite' => false]);
         }
 
-        $customer = Customer::where('phone', $phone)->first();
+        $phoneNormalized = PhoneHelper::normalize($phone);
+        $customer = Customer::where('phone', $phoneNormalized)->first();
 
         if (!$customer) {
             return response()->json(['is_favorite' => false]);

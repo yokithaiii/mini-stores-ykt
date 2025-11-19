@@ -70,9 +70,9 @@
 
 <script setup>
 import { ref, watch } from 'vue';
-import { themeConfig } from '../config/theme.js';
+import { useTheme } from '../composables/useTheme.js';
 
-const colors = themeConfig;
+const { theme: colors } = useTheme();
 
 const props = defineProps({
     show: Boolean,
